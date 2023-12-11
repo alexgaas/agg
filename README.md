@@ -1,9 +1,10 @@
 This article presents a comprehensive foundational framework for achieving effective data aggregation. The term **'effective'** 
 implies the provision of:
 
-The most efficient base algorithm or data structure tailored for optimal latency in the given aggregation scenario.
-Maximal throughput in both parallel and distributed environments.
-Strategies for scaling performance both vertically and horizontally to accommodate the growing data flow.
+The most efficient base algorithm or data structure tailored for: 
+- Optimal latency / the best memory utilization in the given aggregation scenario.
+- Maximal throughput in both parallel and distributed environments.
+- Strategies for scaling performance both vertically and horizontally to accommodate the growing data flow.
 
 _Additional notes_:
 - Algorithmic or strategic considerations are presented with concise explanations and a list of pros and cons. 
@@ -13,12 +14,13 @@ _Additional notes_:
 **Parallel aggregation**
 1. [One machine, One core](#one-machine-one-core)
    1. [Simple array](#simple-array)
-   2. [Binary Tree](#binary-tree)
-   3. [Skip List](#skip-list)
-   4. [Trie](#trie)
-   5. [Lookup table](#lookup-table)
-   6. [Hash map](#hash-map)
-   7. [Trie + Hash map](#trie--hash-map)
+   2. [Associative array approach definition](#associative-array-approach-definition) 
+   3. [Binary Tree](#binary-tree)
+   4. [Skip List](#skip-list)
+   5. [Trie](#trie)
+   6. [Lookup table](#lookup-table)
+   7. [Hash map](#hash-map)
+   8. [Trie + Hash map](#trie--hash-map)
 2. [One machine, Multi-core](#one-machine-multi-core)
    1. [Hash map baseline](#hash-map-baseline)
    2. [Partitioning](#partitioning)
@@ -30,7 +32,7 @@ _Additional notes_:
       3. [Shared hash table with cell spin-lock](#shared-hash-table-with-cell-spin-lock)
       4. [Lock-free hash tables](#lock-free-hash-tables)
    6. [Shared hast table + thread local hash tables](#shared-hast-table--thread-local-hash-tables)
-   7. [Two level hash table](#two-level-hash-table)
+      7. [Two level hash table](#two-level-hash-table)
 
 **Distributed aggregation**
 1. [Baseline (trivial way)](#baseline-trivial-way)
@@ -41,12 +43,10 @@ _Additional notes_:
 # Parallel aggregation
 
 ## One machine, one core
-
 The simplest approach, though often not the most efficient, would be to use an array as the base structure to group by.
 Let's consider this case:
 
 ### Simple array
-
 - Read the data and store it in an array.
 - Sort the data by key.
 - As a result of the sorting operation, groups of data with the same key will be placed consecutively.
@@ -58,15 +58,14 @@ Let's consider this case:
 + you can run any scripts to reduce in streaming mode since data sorted out
 
 #### Cons:
-Let's define N as number of data rows and M as number of keys. So if N > M (usual case, as example -  group by operating system and count popularity):
+Let's define N as number of data rows and M as number of keys. So if `N > M` (usual case, as example -  group by operating system and count popularity):
 - very slow (bad runtime)
-- we spend O(N) of memory to sort whole dataset, not O(M) of keys
+- we spend `O(N)` of memory to sort whole dataset, not `O(M)` of keys
 
 #### Example
 See example in `golang/group/onecore/simple_array`
 
-_Note_: room for improvement here is to use **cache-concise binary search** on sort phase
-
+### Associative array approach definition
 Better way to aggregate to use associative array (get some value by key):
 
 `key tuple -> states of aggregate function` (so for tuple we're getting group by for we assign aggregate function)
@@ -77,7 +76,7 @@ and update that state.
 Which associative array we may use:
 
 - Hash map / lookup table
-- Binary tree (skip list, b-tree, etc)
+- Binary tree (skip list, b-tree)
 - Trie (or trie + hash map)
 
 ### Binary Tree
@@ -132,12 +131,12 @@ See example in `golang/group/onecore/hashmap`
 ### Trie + Hash map
 
 We can bitwise trie and for each first bit of key assign each own hash map.
+
 Example in progress ...
 
 ## One machine, multi-core
 
 ### Hash map baseline
-
 As baseline let's make:
 
 + different threads read different chunks of data by demand
@@ -169,7 +168,6 @@ if we have big M (what is cardinality of GROUP BY), work can't be parallelized
 Let's split whole dataset for approximately equal data blocks. For each data block let's make aggregation in two phases:
 
 #### Phase 1
-
 Different number of threads are going to process different parts of data blocks (which can take and process first, there is
 no any contention or synchronization here). In the thread by using separate simple hash function we hash key into thread number
 and remember it:
@@ -177,7 +175,6 @@ and remember it:
 `hash: key -> bucket_num`
 
 #### Phase 2
-
 Each thread iterates through data block and takes for aggregation only rows with appropriate bucket number
 
 _As minor improvement_: we can implement all as one phase - then every thread calculates hash function from all strings
@@ -211,7 +208,6 @@ _More cons_:
 See example in `golang/group/multicore/partitioning`
 
 ### Parallel merge of hash maps
-
 Let's back to our hashmap baseline. In that case we did not scale Phase 2 - merge of hash maps.
 Could we make that phase parallel?
 
