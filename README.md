@@ -45,6 +45,7 @@ that means in appliance to aggregation operation only.
 3. [Partitioned merge](#partitioned-merge)
 4. [Reshuffle + Partitioned merge](#reshuffle--partitioned-merge)
 
+---
 # Parallel aggregation
 
 ## One machine, one core
@@ -283,80 +284,62 @@ See example in `golang/group/multicore/two_level_hashmap`
 
 ---
 # Distributed aggregation
-One machine is having shared memory, which can be used by N threads. If we need
-to manage data on different machines, we do not have any shared memory. As outcome:
-
-- there is no option to use work-stealing algorithm
-- data will be transferred by network
+While a single machine supports shared memory for N threads, managing data across different machines 
+poses a challenge due to the absence of shared memory. As outcome:
+- There is no option to use work-stealing algorithm.
+- Data will be transferred over network.
 
 ## Baseline (trivial way)
-
-Let's send intermediate results to server initiator of query from data nodes (clients). Sequentially
-put all results to one hash table.
-
+Let's send intermediate results from data nodes (clients) to the query's server initiator. 
+Sequentially, aggregating all results into a single hash table.
 #### Pros:
-+ simple
-+ good scalability with small cardinality of group by
-
++ Simple.
++ Good scalability with small cardinality of group by.
 #### Cons:
-- no scalability with big cardinality
-- you need to get as much memory as much data coming from data nodes (in fact you need memory of all transferred data)
-
+- No scalability with big cardinality.
+- You need to get as much memory as much data coming from data nodes (in fact you need memory of all transferred data).
 #### Example
 See example in `golang/dist-group/baseline/`
 
 ## Ordered merge
-
-Let's send intermediate results to server initiator of query from data nodes in *defined order* (that means
+Lets transmission of intermediate results from data nodes to the query's server initiator in a predefined order (that means
 data must be sorted out on data nodes same and known by server initiator algorithm).
-Then we can pull them in parallel by some chunks to server and merge sorted threads.
-
+Subsequently, parallel retrieval of sorted chunks to the server allows for efficient merging of sorted threads.
 #### Pros:
-+ simple
-+ you spend O(1) memory on merge
-
++ Simple.
++ You spend O(1) memory on merge.
 #### Cons:
-- merge (aggregation itself) is sequential so no scalability with big cardinality of keys
-- merge of sorted thread in heap is slow itself
-- you need sort out data on servers or use fancy algorithms (robinhood tables)
-
+- Merge (aggregation itself) is sequential, so no scalability with big cardinality of keys.
+- The merging of sorted threads in a heap exhibits inherent slowness.
+- You need sort out data on servers or use fancy algorithms such as Robinhood tables.
 #### Example
 See example in `golang/dist-group/ordered-merge/`
 
 ## Partitioned merge
-
-Let's send intermediate results to server initiator of query from data nodes divided by separate
-consistent buckets-partitions in conformed order.
-As result, we can merge by one or few buckets in parallel.
-
+Proposing the transmission of intermediate results from data nodes to the query's server initiator, divided by separate and consistent buckets or partitions in a predefined order. 
+This approach allows for parallel merging of one or a few buckets, streamlining the process.
 #### Pros:
-+ We spend `num_bucket` less memory, then size of result.
-  We can merge by one partition or 16 in parallel depends on our memory strategy.
++ We spend `num_bucket` less memory, then size of result. We can merge by one partition or 16 in parallel depends on our memory strategy.
 + As outcome of first ^ - we can easily make parallel merge of N buckets - that have great scalability.
-
 #### Cons:
-- Phase 2 not scaling by servers in network. Merge happens only on one server initiator of query
-
+- Phase 2 not scaling by servers in network. Merge happens only on one server initiator of query.
 #### Example
 See example in `golang/dist-group/partitioned_merge/`
 
 ## Reshuffle + Partitioned merge
-
-We have to scale phase of merge between servers not just by cores of one server initiator.
-
-On the data nodes, we obtain intermediate results in the form of partitions.
-These partitions are then transferred between nodes in a way that ensures each node receives different partitions,
-ensuring that the partitioned data remains unique per node.
-
-Then we can use N servers-initiators to merge data in parallel (plus each server can use M cores additionally).
-
+To achieve scalability, it's crucial to scale the merge phase across servers, 
+not limited to the cores of a single server initiator:
+At the data nodes, intermediate results are acquired in the form of partitions. 
+These partitions are subsequently transferred between nodes in such a manner that each node receives distinct partitions, 
+preserving the uniqueness of partitioned data per node. Following this, N server initiators 
+can be employed to merge data in parallel, with the additional flexibility of each server 
+utilizing M cores.
 #### Pros:
-+ Great scalability distributed between N machines in the network
-+ Since data not overlap each other by buckets we can just a store data locally on nodes and
-  have result as distributed table on the cluster
-
++ Great scalability distributed between N machines in the network.
++ Given the absence of data overlap between buckets, storing data locally on nodes becomes 
+feasible. This approach allows for the creation of a distributed table across the cluster, eliminating 
+the need for extensive data transfer between nodes.
 #### Cons:
-- Complex coordination between data nodes
-
+- Complex coordination between data nodes.
 #### Example
 In progress...
