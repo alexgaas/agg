@@ -1,4 +1,44 @@
-# Parallel `GROUP BY`
+This article presents a comprehensive foundational framework for achieving effective data aggregation. The term **'effective'** 
+implies the provision of:
+
+The most efficient base algorithm or data structure tailored for optimal latency in the given aggregation scenario.
+Maximal throughput in both parallel and distributed environments.
+Strategies for scaling performance both vertically and horizontally to accommodate the growing data flow.
+
+_Additional notes_:
+- Algorithmic or strategic considerations are presented with concise explanations and a list of pros and cons. 
+- The goal is to provide the shortest yet most effective evaluation of each approach.
+- Details of evaluations could be found mostly in examples. All source examples are provided with **Golang** or **Java**.
+
+**Parallel aggregation**
+1. [One machine, One core](#one-machine-one-core)
+   1. [Simple array](#simple-array)
+   2. [Binary Tree](#binary-tree)
+   3. [Skip List](#skip-list)
+   4. [Trie](#trie)
+   5. [Lookup table](#lookup-table)
+   6. [Hash map](#hash-map)
+   7. [Trie + Hash map](#trie--hash-map)
+2. [One machine, Multi-core](#one-machine-multi-core)
+   1. [Hash map baseline](#hash-map-baseline)
+   2. [Partitioning](#partitioning)
+   3. [Parallel merge of hash maps](#parallel-merge-of-hash-maps)
+   4. [Ordered merge of hash maps](#ordered-merge-of-hash-maps)
+   5. [Concurrent hash tables](#concurrent-hash-tables)
+      1. [Baseline - shared hash map with mutex](#baseline---shared-hash-map-with-mutex)
+      2. [Number of small hash tables with own mutexes](#number-of-small-hash-tables-with-own-mutexes)
+      3. [Shared hash table with cell spin-lock](#shared-hash-table-with-cell-spin-lock)
+      4. [Lock-free hash tables](#lock-free-hash-tables)
+   6. [Shared hast table + thread local hash tables](#shared-hast-table--thread-local-hash-tables)
+   7. [Two level hash table](#two-level-hash-table)
+
+**Distributed aggregation**
+1. [Baseline (trivial way)](#baseline-trivial-way)
+2. [Ordered merge](#ordered-merge)
+3. [Partitioned merge](#partitioned-merge)
+4. [Reshuffle + Partitioned merge](#reshuffle--partitioned-merge)
+
+# Parallel aggregation
 
 ## One machine, one core
 
@@ -38,9 +78,7 @@ Which associative array we may use:
 
 - Hash map / lookup table
 - Binary tree (skip list, b-tree, etc)
-<!--
 - Trie (or trie + hash map)
--->
 
 ### Binary Tree
 
@@ -91,12 +129,10 @@ Which associative array we may use:
 #### Example
 See example in `golang/group/onecore/hashmap`
 
-<!--
 ### Trie + Hash map
 
 We can bitwise trie and for each first bit of key assign each own hash map.
-I will show how that works later
--->
+Example in progress ...
 
 ## One machine, multi-core
 
@@ -174,7 +210,6 @@ _More cons_:
 #### Example
 See example in `golang/group/multicore/partitioning`
 
-<!--
 ### Parallel merge of hash maps
 
 Let's back to our hashmap baseline. In that case we did not scale Phase 2 - merge of hash maps.
@@ -210,7 +245,6 @@ Data in any hash map are (almost) ordered by reminder of division of hash functi
 hash map.
 
 Still in progress...
--->
 
 ### Concurrent hash tables
 
@@ -302,7 +336,7 @@ making parallel merge by buckets very natural way.
 #### Example
 See example in `golang/group/multicore/two_level_hashmap`
 
-# Distributed GROUP BY
+# Distributed aggregation 
 
 One machine is having shared memory, which can be used by N threads. If we need
 to manage data on different machines, we do not have any shared memory. As outcome:
