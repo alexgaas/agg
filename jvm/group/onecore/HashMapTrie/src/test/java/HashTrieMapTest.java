@@ -5,7 +5,6 @@ import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
 import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -29,6 +28,7 @@ public class HashTrieMapTest{
         }
     }
 
+    @Test
     public void testWith() {
         HashTrieMap<String, Integer> empty = HashTrieMap.empty();
         assertThat(empty.with("one", 1).get("one"), equalTo(1));
@@ -41,6 +41,7 @@ public class HashTrieMapTest{
         assertThat(m.get("two"), nullValue());
     }
 
+    @Test
     public void testWithout() {
         HashTrieMap<String, Integer> m = HashTrieMap.<String, Integer>empty().with("one", 1).with("two", 2);
         assertThat(m.get("one"), equalTo(1));
@@ -49,20 +50,22 @@ public class HashTrieMapTest{
         assertThat(m.without("three"), sameInstance(m)); // remove missing
     }
 
+    @Test
     public void testIterate() {
         // copying into a HashMap will do entrySet iteration internally
-        assertThat(new HashMap<String, Integer>(HashTrieMap.of("one", 1, "two", 2, "three", 3)),
+        assertThat(new HashMap<>(HashTrieMap.of("one", 1, "two", 2, "three", 3)),
                 CoreMatchers.<Map<String, Integer>> equalTo(ImmutableMap.of("one", 1, "two", 2, "three", 3)));
     }
 
+    @Test
     public void testEmpty() {
         for (HashTrieMap<Object,Object> empty : Arrays.asList(
                 HashTrieMap.EMPTY,
                 HashTrieMap.empty(),
                 HashTrieMap.of(),
-                new HashTrieMap<Object, Object>(),
-                new HashTrieMap<Object, Object>(Collections.emptyMap()),
-                new HashTrieMap<Object, Object>(new HashMap<Object, Object>()),
+                new HashTrieMap<>(),
+                new HashTrieMap<>(Collections.emptyMap()),
+                new HashTrieMap<>(new HashMap<>()),
                 new HashTrieMap<Object, Object>(HashTrieMap.EMPTY)
         )) {
             assertThat(empty.size(), is(0));
@@ -77,6 +80,7 @@ public class HashTrieMapTest{
         }
     }
 
+    @Test
     public void testSingleton() {
         HashTrieMap<String, Integer> m = HashTrieMap.singleton("meaning", 42);
         assertThat(m.size(), is(1));
@@ -85,6 +89,7 @@ public class HashTrieMapTest{
         assertThat(m.get(1), equalTo(null));
     }
 
+    @Test
     public void testOf() {
         HashTrieMap<String, Integer> m = HashTrieMap.of("one", 1, "two", 2, "three", 3);
         assertThat(m.size(), is(3));
@@ -95,7 +100,7 @@ public class HashTrieMapTest{
         assertThat(m.get(1), equalTo(null));
 
         // Copying
-        assertThat(new HashTrieMap<String, Integer>(m).entrySet(), containsInAnyOrder(m.entrySet().toArray()));
+        assertThat(new HashTrieMap<>(m).entrySet(), containsInAnyOrder(m.entrySet().toArray()));
     }
 
     // *** Special cases ***
@@ -103,17 +108,17 @@ public class HashTrieMapTest{
     private static class Verifier<K,V> {
         private final Set<K> mKeySuperset = new HashSet<K>();
         private final Set<V> mValueSuperset = new HashSet<V>();
-        private final Deque<Map.Entry<HashTrieMap<K,V>, Map<K,V>>> mStates = new ArrayDeque<Map.Entry<HashTrieMap<K, V>, Map<K, V>>>();
+        private final Deque<Map.Entry<HashTrieMap<K,V>, Map<K,V>>> mStates = new ArrayDeque<>();
 
         public Verifier() {
-            mStates.add(new AbstractMap.SimpleImmutableEntry<HashTrieMap<K, V>, Map<K, V>>(
-                    HashTrieMap.<K, V> empty(),
+            mStates.add(new AbstractMap.SimpleImmutableEntry<>(
+                    HashTrieMap.<K, V>empty(),
                     new HashMap<K, V>())
             );
         }
 
         private void addState(HashTrieMap<K,V> hashTrieMap, HashMap<K,V> hashMap) {
-            mStates.add(new AbstractMap.SimpleImmutableEntry<HashTrieMap<K, V>, Map<K, V>>(hashTrieMap, hashMap));
+            mStates.add(new AbstractMap.SimpleImmutableEntry<>(hashTrieMap, hashMap));
             verify();
         }
 
@@ -175,6 +180,7 @@ public class HashTrieMapTest{
         }
     }
 
+    @Test
     public void testSmallMaps() {
         Verifier<String, Integer> test = new Verifier<String, Integer>();
         test.put("one", 1); // insert
@@ -192,6 +198,7 @@ public class HashTrieMapTest{
         return new TestHash<T>(value, hash);
     }
 
+    @Test
     public void testChildMovement() {
         Verifier<TestHash<String>, Integer> test = new Verifier<TestHash<String>, Integer>();
 
@@ -210,6 +217,7 @@ public class HashTrieMapTest{
         test.remove(th("01000", 0x0008)); // empty
     }
 
+    @Test
     public void testRemoveCollapse() {
         Verifier<TestHash<String>, Integer> test = new Verifier<TestHash<String>, Integer>();
 
@@ -220,6 +228,7 @@ public class HashTrieMapTest{
         test.remove(th("0011111", 0x1f));
     }
 
+    @Test
     public void testReplace() {
         Verifier<TestHash<String>, Integer> test = new Verifier<TestHash<String>, Integer>();
 
@@ -236,6 +245,7 @@ public class HashTrieMapTest{
         test.put(th("b3", 0xb00008), 9); // replace last collision
     }
 
+    @Test
     public void testCollisions() {
         final int repeat = 5;
 
@@ -322,6 +332,7 @@ public class HashTrieMapTest{
         }
     }
 
+    @Test
     public void testFuzz() {
         for (IntegerGenerator generator : Arrays.asList(
                 GOOD_RANDOM_GENERATOR,
@@ -374,21 +385,5 @@ public class HashTrieMapTest{
             long after = System.nanoTime();
             System.err.println("Generator " + generator + " took " + (after - before) / 1.0E6 + " ms");
         }
-    }
-
-    @Test
-    public void testSerialization() throws IOException, ClassNotFoundException {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        ObjectOutputStream out = new ObjectOutputStream(bytes);
-        out.writeObject(HashTrieMap.of("one", 1, "two", 2, "three", 3));
-        out.writeObject(HashTrieMap.empty());
-        out.writeObject(HashTrieMap.singleton(123, 12.3f));
-        out.close();
-
-        ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
-        assertThat((HashTrieMap<String, Integer>) in.readObject(), equalTo(HashTrieMap.of("one", 1, "two", 2, "three", 3)));
-        assertThat((HashTrieMap<Object, Object>) in.readObject(), equalTo(HashTrieMap.empty()));
-        assertThat((HashTrieMap<Integer, Float>) in.readObject(), equalTo(HashTrieMap.singleton(123, 12.3f)));
-        in.close();
     }
 }

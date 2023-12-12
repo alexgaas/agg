@@ -79,7 +79,7 @@ Which associative array we may use:
 
 - Hash map / lookup table.
 - Binary tree (skip list, b-tree).
-- Trie (or trie + hash map).
+- Trie (or trie + hash map also known as HAMT).
 
 ### Binary Tree
 #### Cons:
@@ -110,7 +110,7 @@ _Table of JVM (OpenJDK 11) map implementations_ as example:
 #### Cons:
 - Trie might be compact, but then we have no chance to update it.
 - Or (if we need to update) trie will require a huge amount of memory (to update).
-- Great data structure but it does not fit problem of data aggregation.
+- Great data structure, but it does not fit problem of data aggregation.
 
 ### Lookup table
 #### Pros:
@@ -129,7 +129,7 @@ See example in `golang/group/onecore/hashmap`
 
 ### Trie + Hash map
 We can employ a bitwise trie, assigning a separate hash map for each unique first bit of the key.
-This technic may be effective for aggregation - please see section <[Two level hash table](#two-level-hash-table)> for more details.
+This approach may be applied to [Parallel merge of hash maps](#parallel-merge-of-hash-maps) phase.
 #### Example
 See example in `jvm/group/onecore/HashTrieMap`
 

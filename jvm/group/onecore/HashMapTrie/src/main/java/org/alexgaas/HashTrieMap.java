@@ -1,14 +1,9 @@
 package org.alexgaas;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.lang.reflect.Array;
 import java.util.*;
 
-public class HashTrieMap<K,V> extends AbstractMap<K,V> implements SharedMap<K,V>, Externalizable {
-    private static final long serialVersionUID = -976712368400781259L;
+public class HashTrieMap<K,V> extends AbstractMap<K,V> {
     private static final int HASH_SHIFT = 5;
     private static final int HASH_MASK = (1 << HASH_SHIFT) - 1;
 
@@ -30,8 +25,6 @@ public class HashTrieMap<K,V> extends AbstractMap<K,V> implements SharedMap<K,V>
         }
     }
 
-    // these would all be final, but for Java's horrid readExternal() deserialization
-    // root :: Node | SimpleMapEntry | SimpleMapEntry[] | Null
     private Object mRoot;
     private int mSize;
     // cached implementations
@@ -123,7 +116,7 @@ public class HashTrieMap<K,V> extends AbstractMap<K,V> implements SharedMap<K,V>
                 }
                 @Override
                 public void remove() {
-                    throw new UnsupportedOperationException("remove() called on immutable iterator (you cannot mutate a SharedMap using its' iterator)");
+                    throw new UnsupportedOperationException("remove() called on immutable iterator");
                 }
             };
         }
@@ -242,7 +235,6 @@ public class HashTrieMap<K,V> extends AbstractMap<K,V> implements SharedMap<K,V>
         return result;
     }
 
-    @Override
     public HashTrieMap<K, V> with(K key, V value) {
         if (key == null) {
             throw new NullPointerException("Cannot add a null key to a HashTrieMap");
@@ -327,7 +319,6 @@ public class HashTrieMap<K,V> extends AbstractMap<K,V> implements SharedMap<K,V>
                 newRoot = connect(newRoot, parent, parentIndex, new Node(children, currentNode.hasChild));
                 parent = children;
                 parentIndex = childIndex;
-                //continue; (implicit)
             }
         }
     }
@@ -396,7 +387,6 @@ public class HashTrieMap<K,V> extends AbstractMap<K,V> implements SharedMap<K,V>
         }
     }
 
-    @Override
     public HashTrieMap<K, V> without(K key) {
         if (key == null) {
             throw new NullPointerException("Cannot add a null key to a HashTrieMap");
@@ -479,7 +469,7 @@ public class HashTrieMap<K,V> extends AbstractMap<K,V> implements SharedMap<K,V>
 
         @Override
         public Map.Entry<K, V> next() {
-            Map.Entry<K,V> next =
+            var next =
                     (mCurrent instanceof SimpleImmutableEntry[])
                     ? ((SimpleImmutableEntry[]) mCurrent)[mCurrentCollisionIndex]
                     : (SimpleImmutableEntry) mCurrent;
@@ -489,26 +479,7 @@ public class HashTrieMap<K,V> extends AbstractMap<K,V> implements SharedMap<K,V>
 
         @Override
         public void remove() {
-            throw new UnsupportedOperationException("remove() called on immutable iterator (you cannot mutate a SharedMap using its iterator)");
+            throw new UnsupportedOperationException("remove() called on immutable iterator");
         }
-    }
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeInt(mSize);
-        for (Map.Entry<K,V> entry : this.entrySet()) {
-            out.writeObject(entry);
-        }
-    }
-
-    @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        mSize = in.readInt();
-        HashTrieMap<K,V> m = HashTrieMap.empty();
-        for (int i = 0; i < mSize; ++i) {
-            Map.Entry<K,V> entry = (Map.Entry<K,V>) in.readObject();
-            m = m.with(entry.getKey(), entry.getValue());
-        }
-        mRoot = m.mRoot;
     }
 }
