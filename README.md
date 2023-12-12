@@ -14,7 +14,7 @@ _Additional notes_:
 All source examples are provided with **Golang** or **Java**. I had intent to not provide any benchmarks, but only
 high level explanations to make this write-up as simple as possible. 
 - Evaluation is given in appliance to aggregation operation. So if you see evaluation as `big overhead, terrible cache locality`,
-that means in appliance to aggregation operation only.
+that means **in appliance to aggregation operation only**.
 
 **Parallel aggregation**
 1. [One machine, One core](#one-machine-one-core)
@@ -110,6 +110,7 @@ _Table of JVM (OpenJDK 11) map implementations_ as example:
 #### Cons:
 - Trie might be compact, but then we have no chance to update it.
 - Or (if we need to update) trie will require a huge amount of memory (to update).
+- Great data structure but it does not fit problem of data aggregation.
 
 ### Lookup table
 #### Pros:
@@ -119,7 +120,7 @@ _Table of JVM (OpenJDK 11) map implementations_ as example:
 
 ### Hash map:
 #### Pros:
-+ Have the best efficiency by runtime and memory.
++ **Have the best efficiency by runtime and memory.**
 #### Cons:
 - Many implementation details - which memory layout, which mechanism of solving hash collisions,
   which hash function, how to make hash map for tuple, how to make hash map for string key of variable length.
@@ -127,9 +128,10 @@ _Table of JVM (OpenJDK 11) map implementations_ as example:
 See example in `golang/group/onecore/hashmap`
 
 ### Trie + Hash map
-We can bitwise trie and for each first bit of key assign each own hash map.
-
-Example in progress ...
+We can employ a bitwise trie, assigning a separate hash map for each unique first bit of the key.
+This technic may be effective for aggregation - please see section <[Two level hash table](#two-level-hash-table)> for more details.
+#### Example
+See example in `jvm/group/onecore/HashTrieMap`
 
 ## One machine, multi-core
 
