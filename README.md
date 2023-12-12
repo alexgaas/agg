@@ -129,7 +129,7 @@ See example in `golang/group/onecore/hashmap`
 
 ### Trie + Hash map
 We can employ a bitwise trie, assigning a separate hash map for each unique first bit of the key.
-This approach may be applied to [Parallel merge of hash maps](#parallel-merge-of-hash-maps) phase.
+This approach may be applied as basis for [parallel merge of hash maps](#parallel-merge-of-hash-maps) phase.
 #### Example
 See example in `jvm/group/onecore/HashTrieMap`
 
@@ -156,7 +156,7 @@ allowing for efficient parallelization.
 - Not scalable with big cardinality of group by.
 
 _Explanation_: Let's define N as number of data rows and M as number of keys.
-Let's define N as number of data rows and M as number of keys. `O(M)` of work made sequentially since
+Let's define `N` as number of data rows and M as number of keys. `O(M)` of work made sequentially since
 if we have big M (what is cardinality of group by), work can't be parallelized.
 
 ### Partitioning
@@ -322,7 +322,7 @@ data must be sorted out on data nodes same and known by server initiator algorit
 Subsequently, parallel retrieval of sorted chunks to the server allows for efficient merging of sorted threads.
 #### Pros:
 + Simple.
-+ You spend O(1) memory on merge.
++ You spend `O(1)` memory on merge.
 #### Cons:
 - Merge (aggregation itself) is sequential, so no scalability with big cardinality of keys.
 - The merging of sorted threads in a heap exhibits inherent slowness.
