@@ -32,7 +32,7 @@ that means in appliance to aggregation operation only.
    3. [Parallel merge of hash maps](#parallel-merge-of-hash-maps)
    4. [Ordered merge of hash maps](#ordered-merge-of-hash-maps)
    5. [Concurrent hash tables](#concurrent-hash-tables)
-      1. [Baseline - shared hash map with mutex](#baseline---shared-hash-map-with-mutex)
+      1. [Baseline - A shared hash map with mutex synchronization](#baseline---a-shared-hash-map-with-mutex-synchronization)
       2. [A set of small hash tables, each with its own mutex.](#a-set-of-small-hash-tables-each-with-its-own-mutex)
       3. [Shared hash table with a spin-lock mechanism on each cell](#shared-hash-table-with-a-spin-lock-mechanism-on-each-cell)
       4. [Lock-free hash table](#lock-free-hash-table)
@@ -90,6 +90,19 @@ Which associative array we may use:
 ### Skip list
 #### Pros:
 + In scenarios where a list needs to be consistently kept in memory with concurrent access, a skip list may prove to be a fitting solution.
+
+_Table of JVM (OpenJDK 11) map implementations_ as example:
+
+| Map                    | Iteration order    | Null (K / V) | Sorted    | Navigable              | Concurrency   |
+|------------------------|--------------------|--------------|-----------|------------------------|---------------|
+| HashMap                | unspecified        | Yes / Yes    |           |                        |               |
+| WeakHashMap            | unspecified        | Yes / Yes    |           |                        |               |
+| TreeMap                | natural-order      | No / Yes     | SortedMap | NavigableMap           |               |
+| **ConcurrentSkipList** | natural-order      | No / No      | SortedMap | ConcurrentNavigableMap | ConcurrentMap |
+| ConcurrentHashMap      | unspecified        | No / No      |           |                        | ConcurrentMap |
+| LinkedHashMap          | original-insertion | Yes / Yes    |           |                        |               |
+
+
 #### Cons:
 - Same issues as for binary tree - big overhead, terrible cache locality.
 
@@ -208,9 +221,9 @@ Still in progress...
 
 ### Concurrent hash tables
 
-#### Baseline - shared hash map with mutex
+#### Baseline - A shared hash map with mutex synchronization
 #### Pros:
-+ Simple.
++ Simple design.
 #### Cons:
 - Negative scalability - more threads we have more negative scalability.
 
