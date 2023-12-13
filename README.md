@@ -36,7 +36,7 @@ that means **in appliance to aggregation operation only**.
       2. [A set of small hash tables, each with its own mutex.](#a-set-of-small-hash-tables-each-with-its-own-mutex)
       3. [Shared hash table with a spin-lock mechanism on each cell](#shared-hash-table-with-a-spin-lock-mechanism-on-each-cell)
       4. [Lock-free hash table](#lock-free-hash-table)
-   6. [Shared hast table + thread local hash tables](#shared-hast-table--thread-local-hash-tables)
+   6. [### Shared hash table + thread local hash tables](#shared-hash-table--thread-local-hash-tables)
    7. [Two level hash table](#two-level-hash-table)
 
 **Distributed aggregation**
@@ -128,10 +128,19 @@ _Table of JVM (OpenJDK 11) map implementations_ as example:
 See example in `golang/group/onecore/hashmap`
 
 ### Trie + Hash map
-We can employ a bitwise trie, assigning a separate hash map for each unique first bit of the key.
-This approach may be applied as basis for [parallel merge of hash maps](#parallel-merge-of-hash-maps) phase.
+We can employ a bitwise trie, assigning a separate hash map for each unique first bit of the key. As result, we get
+data structure is like a combination of a hash table and a shallow tree.
+#### Pros:
++ No need to rehash
++ Since data structure have relatively shallow tree (in average in 6 layers we can save about 33,5 millions keys/values),
+lookup will be much faster than traditional tree
+#### Cons:
+- Still slower than classic hash map, it has less predictable cache locality b/c HAMT by nature is tree.
+- Fits ideal for building immutable maps b/c has ability of tries to potentially share duplicated structure with other tries but
+does not work as good for aggregation problem.
+
 #### Example
-See example in `jvm/group/onecore/HashTrieMap`
+See example in `golang/group/base/hamt`
 
 ## One machine, multi-core
 
@@ -249,7 +258,7 @@ potentially causing your code to linger in the top CPU percentile without progre
 - Hard to resize. They not resizable at all or having extremely complicated code which in addition will be slow.
 - Lock-free means synchronization even if it is lock free. Best way in terms of scalability to avoid any synchronization.
 
-### Shared hast table + thread local hash tables
+### Shared hash table + thread local hash tables
 Let's make one shared hash table with mutex on the cell. If cell already is locked we put data to local hash table.
 Then all hot cells (cells with contention on it) will be placed in local hash tables. As outcome highly likely all local 
 hash tables going to be small. In the end we merge all local hash tables to the global one - this phase should not take too long since
