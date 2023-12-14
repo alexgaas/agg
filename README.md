@@ -209,21 +209,35 @@ Let's back to our hashmap baseline. In that case we did not scale Phase 2 - merg
 Could we make that phase parallel?
 #### Approach 1
 Let's combine both baseline hashmap approach and partitioning approach:
-+ Run threads with local hashmaps using buckets.
-+ As outcome each thread will return hash map with different keys.
++ Run threads with local hash maps, implementing a bucket-based approach similar to the previous example for efficient partitioning.
++ As a result, each thread will produce a hash map with distinct keys / buckets.
 + Sequentially merge hash maps to new one assuming there is no any costs b/c keys different for each hash map.
 #### Cons:
 - In this model, each thread is responsible for processing the entire dataset, with the scalability constrained by the 
-shared RAM bandwidth across all threads. This limitation persists even when an ample number of CPU resources are available.
-#### Approach 2
-+ Let's resize hash maps gotten from threads to one size.
-+ Split them implicitly on different sets of keys.
-+ In different threads we're going to merge appropriate sets of keys.
-#### Cons:
-Extremely complicated code because we need to resolve problem of collision resolution chains in the start and end of new 
-hash map during the process of parallel merge.
+shared RAM bandwidth across all threads.
+
+_Improvement_: We can improve parallel merge phase using radix-partitioning on the group hash approach as to - 
+Each thread builds not one, but multiple partitioned hash tables based on a radix-partitioning on the group hash.
+Visual representation of this strategy:
+
+<img src="./plots/aggr-ht-parallel.png">
+
+Details and results of this strategy pretty well are defined in this paper:
+https://15721.courses.cs.cmu.edu/spring2016/papers/p743-leis.pdf
 #### Example
 Still in progress...
+
+#### Approach 2
+To achieve parallel merging, keys obtained from hash maps can be processed based on their placement within the hash maps. Leveraging the fact that keys in a hash map, up to the collision resolution chains, are (almost) ordered by the remainder of the division of the hash function, the following steps are proposed for parallel merge:
+
+- Resize hash maps obtained from threads to a consistent size.
+- Implicitly split the hash maps into different subsets of keys, such as the beginning, middle, and end. Within each subset, keys up to the collision resolution chains are different.
+- Design an algorithm to resolve and merge keys at the beginning and end of the sequence. The middle subset, having distinct keys, can be iterated and merged quickly.
+- Employ multiple threads to merge the appropriate sets of keys based on the approach outlined in step 2 and 3.
+#### Cons:
+Extremely complicated code (the code complexity is significantly increased due to the need 
+to address collision resolution chain issues at the beginning and end of the new hash map 
+during the parallel merge process).
 
 ### Ordered merge of hash maps
 Data in any hash map are (almost) ordered by reminder of division of hash function on the size of hash map.
