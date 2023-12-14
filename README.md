@@ -34,7 +34,7 @@ that means **in appliance to aggregation operation only**.
    5. [Concurrent hash tables](#concurrent-hash-tables)
       1. [Baseline - A shared hash map with mutex synchronization](#baseline---a-shared-hash-map-with-mutex-synchronization)
       2. [A set of small hash tables, each with its own mutex.](#a-set-of-small-hash-tables-each-with-its-own-mutex)
-      3. [Shared hash table with a spin-lock mechanism on each cell](#shared-hash-table-with-a-spin-lock-mechanism-on-each-cell)
+      3. [A shared hash table implementing a spin-lock mechanism on each cell](#a-shared-hash-table-implementing-a-spin-lock-mechanism-on-each-cell)
       4. [Lock-free hash table](#lock-free-hash-table)
    6. [### Shared hash table + thread local hash tables](#shared-hash-table--thread-local-hash-tables)
    7. [Two level hash table](#two-level-hash-table)
@@ -240,9 +240,7 @@ to address collision resolution chain issues at the beginning and end of the new
 during the parallel merge process).
 
 ### Ordered merge of hash maps
-Data in any hash map are (almost) ordered by reminder of division of hash function on the size of hash map.
-
-Still in progress...
+In progress...
 
 ### Concurrent hash tables
 
@@ -261,7 +259,7 @@ protected by mutex to prevent out of sync state in the bucket when it is updated
 - Since data never distributed evenly (but _usually distributed by power law_) we will get contention on hot bucket, 
 so it won't scale.
 
-#### Shared hash table with a spin-lock mechanism on each cell
+#### A shared hash table implementing a spin-lock mechanism on each cell
 #### Cons:
 - Because the OS scheduler is unaware of spin locks, it may switch to another thread, 
 potentially causing your code to linger in the top CPU percentile without progress.
