@@ -36,7 +36,7 @@ that means **in appliance to aggregation operation only**.
       2. [A set of small hash tables, each with its own mutex.](#a-set-of-small-hash-tables-each-with-its-own-mutex)
       3. [A shared hash table implementing a spin-lock mechanism on each cell](#a-shared-hash-table-implementing-a-spin-lock-mechanism-on-each-cell)
       4. [Lock-free hash table](#lock-free-hash-table)
-   6. [### Shared hash table + thread local hash tables](#shared-hash-table--thread-local-hash-tables)
+   6. [Shared hash table + thread local hash tables](#shared-hash-table--thread-local-hash-tables)
    7. [Two level hash table](#two-level-hash-table)
 
 **Distributed aggregation**
