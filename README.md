@@ -11,7 +11,7 @@ _Additional notes_:
 - The goal is to provide the shortest yet most effective evaluation of each approach. I used simple words (such as
 "slow", "simple", "complex", "terrible") to evaluate each approach.
 - Details of evaluations (with benchmark numbers) could be found mostly in examples. 
-All source examples are provided with **Golang** or **Java**. I had intent to not provide any benchmarks, but only
+All source examples are provided with **Golang**. I had intent to not provide any benchmarks, but only
 high level explanations to make this write-up as simple as possible. 
 - Evaluation is given in appliance to aggregation operation. So if you see evaluation as `big overhead, terrible cache locality`,
 that means **in appliance to aggregation operation only**.
