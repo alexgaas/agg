@@ -222,10 +222,8 @@ Visual representation of this strategy:
 
 <img src="./plots/aggr-ht-parallel.png">
 
-Details and results of this strategy pretty well are defined in this paper:
+Details and results of this strategy pretty well defined in this paper:
 https://15721.courses.cs.cmu.edu/spring2016/papers/p743-leis.pdf
-#### Example
-Still in progress...
 
 #### Approach 2
 To achieve parallel merging, keys obtained from hash maps can be processed based on their placement within the hash maps. Leveraging the fact that keys in a hash map, up to the collision resolution chains, are (almost) ordered by the remainder of the division of the hash function, the following steps are proposed for parallel merge:
@@ -240,7 +238,11 @@ to address collision resolution chain issues at the beginning and end of the new
 during the parallel merge process).
 
 ### Ordered merge of hash maps
-In progress...
+Ordered merge of hash maps is easy to achieve in case merged maps ordered mostly in same oder except few cases on the edges when we able to resolve using fancy algorithms or permutations. Robinhood tables would fit good for this kind of merge.
+Please see this paper: 
+https://github.com/mlochbaum/rhsort 
+
+To get intuition how to build this strategy.
 
 ### Concurrent hash tables
 
@@ -377,5 +379,3 @@ feasible. This approach allows for the creation of a distributed table across th
 the need for extensive data transfer between nodes.
 #### Cons:
 - Complex coordination between data nodes.
-#### Example
-In progress...
